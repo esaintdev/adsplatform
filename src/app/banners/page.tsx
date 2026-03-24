@@ -415,12 +415,32 @@ export default function BannersPage() {
                     <span className="text-blue-500/60 lowercase font-bold">upload or stream</span>
                   </label>
                   
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={e => setFile(e.target.files?.[0] || null)}
-                    className="block w-full text-[10px] text-slate-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-blue-600 file:text-white hover:file:bg-blue-500 file:transition-all cursor-pointer file:tracking-widest"
-                  />
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="file" 
+                      id="banner-file-input"
+                      accept="image/*" 
+                      onChange={e => {
+                        const newFile = e.target.files?.[0] || null;
+                        setFile(newFile);
+                        if (newFile) setForm(f => ({ ...f, imageUrl: '' }));
+                      }}
+                      className="block w-full text-[10px] text-slate-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-blue-600 file:text-white hover:file:bg-blue-500 file:transition-all cursor-pointer file:tracking-widest"
+                    />
+                    {file && (
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setFile(null);
+                          const input = document.getElementById('banner-file-input') as HTMLInputElement;
+                          if (input) input.value = '';
+                        }} 
+                        className="h-9 px-4 rounded-xl bg-rose-500/20 text-rose-500 text-[9px] font-black uppercase tracking-widest hover:bg-rose-500/30 transition-all border border-rose-500/20"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-4 opacity-20">
                       <div className="h-px flex-1 bg-white" />
@@ -429,10 +449,17 @@ export default function BannersPage() {
                   </div>
 
                   <input 
-                    className="w-full h-11 bg-slate-800/40 border-slate-700/30 rounded-xl px-5 text-[11px] font-mono outline-none focus:border-blue-500/50 transition-all shadow-inner placeholder:text-slate-700" 
+                    className="w-full h-11 bg-slate-800/40 border-slate-700/30 rounded-xl px-5 text-[11px] font-mono outline-none focus:border-blue-500/50 transition-all shadow-inner placeholder:text-slate-700 disabled:opacity-30" 
                     placeholder="Direct URL (static/animated)..." 
                     value={form.imageUrl} 
-                    onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} 
+                    onChange={e => {
+                      setForm(f => ({ ...f, imageUrl: e.target.value }));
+                      if (e.target.value && file) {
+                        setFile(null);
+                        const input = document.getElementById('banner-file-input') as HTMLInputElement;
+                        if (input) input.value = '';
+                      }
+                    }} 
                     disabled={!!file}
                   />
                 </div>
