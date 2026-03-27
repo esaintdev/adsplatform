@@ -37,9 +37,9 @@ interface Campaign { id: string; name: string; }
 function EmbedModal({ banner, baseUrl, onClose }: { banner: Banner; baseUrl: string; onClose: () => void }) {
   const [isFloating, setIsFloating] = useState(false);
   const [position, setPosition] = useState('bottom-right');
-
+  const trackerBaseUrl = process.env.NEXT_PUBLIC_TRACKER_URL || 'https://track.yourdomain.com';
   const trackClickUrl = `${baseUrl}/api/track/click?bannerId=${banner.id}`;
-  const trackImprUrl = `${baseUrl}/api/track/impression?bannerId=${banner.id}`;
+  const trackImprUrl = `${trackerBaseUrl}/impression?bannerId=${banner.id}`;
 
   const getPositionStyles = () => {
     switch (position) {
