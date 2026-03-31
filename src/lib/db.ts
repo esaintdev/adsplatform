@@ -1,13 +1,12 @@
 import { Pool } from 'pg';
 
-// Supabase REQUIRED SSL for production. 
-// We default to SSL enabled unless explicitly set to 'false'.
-const isProd = process.env.NODE_ENV === 'production';
-const sslDisabled = process.env.DATABASE_SSL === 'false';
+// ONLY use SSL if DATABASE_SSL is explicitly set to 'true'.
+// Namecheap VPS often does not support SSL by default.
+const sslEnabled = process.env.DATABASE_SSL === 'true';
 
 const poolOptions = {
   connectionString: process.env.DATABASE_URL,
-  ssl: (!sslDisabled || isProd) ? { rejectUnauthorized: false } : false,
+  ssl: sslEnabled ? { rejectUnauthorized: false } : false,
 };
 
 // Prevent connection exhaustion in Next.js API routes (Serverless/Development constraints)
