@@ -1,13 +1,13 @@
 import { Pool } from 'pg';
 
-// Disable SSL for local/VPS Postgres by setting DATABASE_SSL=false in your .env
-// SSL is REQUIRED for Supabase/Production
-const isProduction = process.env.NODE_ENV === 'production';
-const sslEnabled = process.env.DATABASE_SSL !== 'false';
+// Supabase REQUIRED SSL for production. 
+// We default to SSL enabled unless explicitly set to 'false'.
+const isProd = process.env.NODE_ENV === 'production';
+const sslDisabled = process.env.DATABASE_SSL === 'false';
 
 const poolOptions = {
   connectionString: process.env.DATABASE_URL,
-  ssl: isProduction || sslEnabled ? { rejectUnauthorized: false } : false,
+  ssl: (!sslDisabled || isProd) ? { rejectUnauthorized: false } : false,
 };
 
 // Prevent connection exhaustion in Next.js API routes (Serverless/Development constraints)
