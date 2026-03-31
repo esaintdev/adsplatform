@@ -3,9 +3,17 @@ const express = require('express');
 const { Pool } = require('pg');
 const crypto = require('crypto');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
+
+app.use('/uploads', express.static(UPLOADS_DIR));
 // trust proxy to get real IPs if Namecheap runs Nginx reverse proxy
 app.set('trust proxy', true);
 
@@ -142,6 +150,24 @@ app.get('/click', async (req, res) => {
   } catch (e) {
     console.error('Click error:', e);
     res.status(500).send('Server Error');
+  }
+});
+
+app.post('/upload', async (req, res) => {
+  const { fileName, fileData } = req.body;
+  if (!fileName || !fileData) return res.status(400).send('Missing data');
+
+  try {
+    const filePath = path.join(UPLOADS_DIR, fileName);
+    const buffer = Buffer.from(fileData, 'base64');
+    fs.writeFileSync(filePath, buffer);
+
+    const trackerUrl = process.env.NEXT_PUBLIC_TRACKER_URL || `http://${req.headers.host}`;
+    const fileUrl = `${trackerUrl}/uploads/${fileName}`;
+    res.json({ url: fileUrl });
+  } catch (e) {
+    console.error('Upload error:', e);
+    res.status(500).send('Upload failed');
   }
 });
 

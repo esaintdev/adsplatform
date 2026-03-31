@@ -134,6 +134,7 @@ export default function BannersPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const trackerBaseUrl = process.env.NEXT_PUBLIC_TRACKER_URL || baseUrl;
 
   const load = () => {
     setLoading(true);
@@ -163,21 +164,27 @@ export default function BannersPage() {
       const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      const { error } = await supabase.storage
-        .from('banners')
-        .upload(filePath, file);
+      // Convert file to base64 for the VPS upload
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve) => {
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.readAsDataURL(file);
+      });
 
-      if (error) {
-        setAlert({ message: 'Error uploading image: ' + error.message, type: 'error' });
+      const uploadRes = await fetch(`${trackerBaseUrl}/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: filePath, fileData: base64 }),
+      });
+
+      if (!uploadRes.ok) {
+        setAlert({ message: 'Error uploading image to VPS.', type: 'error' });
         setSaving(false);
         return;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('banners')
-        .getPublicUrl(filePath);
-
-      finalImageUrl = publicUrl;
+      const { url } = await uploadRes.json();
+      finalImageUrl = url;
     }
 
     if (!finalImageUrl) {
