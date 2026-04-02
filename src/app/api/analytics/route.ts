@@ -47,20 +47,39 @@ export async function GET(request: Request) {
       chartValues
     );
 
-    // Top banners by clicks
+    // Top banners by clicks within the requested timeframe
+    const topBannersValues: (string | number)[] = campaignId ? [campaignId, days] : [days];
+    const topBannersDaysPlaceholder = campaignId ? '$2' : '$1';
+
     const { rows: topBanners } = await db.query(
       `SELECT b.id, b.name, b.image_url, b.target_url,
-        COUNT(CASE WHEN e.type = 'IMPRESSION' THEN e.id END) AS impressions,
-        COUNT(DISTINCT CASE WHEN e.type = 'IMPRESSION' THEN e.ip_address END) AS unique_impressions,
-        COUNT(CASE WHEN e.type = 'CLICK' THEN e.id END) AS clicks
+        stats.impressions,
+        stats.unique_impressions,
+        stats.clicks
        FROM banners b
-       LEFT JOIN tracking_events e ON e.banner_id = b.id
-       GROUP BY b.id
-       ORDER BY clicks DESC
-       LIMIT 10`
+       INNER JOIN (
+         SELECT banner_id,
+           COUNT(CASE WHEN type = 'IMPRESSION' THEN id END) AS impressions,
+           COUNT(DISTINCT CASE WHEN type = 'IMPRESSION' THEN ip_address END) AS unique_impressions,
+           COUNT(CASE WHEN type = 'CLICK' THEN id END) AS clicks
+         FROM tracking_events
+         WHERE created_at >= NOW() - (INTERVAL '1 day' * ${topBannersDaysPlaceholder})
+         ${campaignId ? 'AND campaign_id = $1' : ''}
+         GROUP BY banner_id
+       ) stats ON stats.banner_id = b.id
+       ORDER BY stats.clicks DESC
+       LIMIT 10`,
+      topBannersValues
     );
 
-    const summary = (totalRows as any[])[0];
+    const summary = (totalRows as any[])[0] || {
+      total_impressions: 0,
+      unique_impressions: 0,
+      total_clicks: 0,
+      total_visits: 0,
+      unique_visits: 0,
+      total_actions: 0
+    };
     const impressions = Number(summary.total_impressions) || 0;
     const clicks = Number(summary.total_clicks) || 0;
 
