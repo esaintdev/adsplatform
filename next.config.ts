@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
   async redirects() {
     // This will immediately drop Vercel invocations by routing legacy traffic to your VPS
     const trackerUrl = process.env.NEXT_PUBLIC_TRACKER_URL;
