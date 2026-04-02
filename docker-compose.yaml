@@ -1,16 +1,17 @@
 version: '3.8'
 
 services:
-  ads-app:
+  ads-v4:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ads-app
+    container_name: ads-v4
     restart: always
     ports:
-      - "3000:3000"
+      - "3008:3008"
     environment:
-      - DATABASE_URL=postgresql://postgres:uzomary_adstracking@host.docker.internal:5432/adstracking
+      - PORT=3008
+      - DATABASE_URL=postgresql://postgres:uzomary_adstracking@127.0.0.1:5432/adstracking
       - DATABASE_SSL=false
       - JWT_SECRET=adtrack_vps_production_secret_2024
       - NEXT_PUBLIC_TRACKER_URL=https://track.stakerschoiceads.com
