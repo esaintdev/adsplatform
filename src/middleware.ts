@@ -18,6 +18,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/setup") || 
     pathname.startsWith("/api/auth") || 
     pathname.startsWith("/api/track") ||
+    pathname.startsWith("/uploads") ||         // Banner images served as static assets
     (pathname.startsWith("/api/banners") && pathname.endsWith("/image")) ||
     pathname.includes("favicon.ico") ||
     pathname.startsWith("/_next") ||

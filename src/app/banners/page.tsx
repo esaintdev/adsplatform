@@ -159,31 +159,39 @@ export default function BannersPage() {
     let finalImageUrl = form.imageUrl;
 
     if (file) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      try {
+        // Use native FormData — no base64 bloat, no cross-origin call to tracker
+        const formPayload = new FormData();
+        formPayload.append('file', file);
 
-      // Convert file to base64 for the VPS upload
-      const reader = new FileReader();
-      const base64 = await new Promise<string>((resolve) => {
-        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-        reader.readAsDataURL(file);
-      });
+        // 30-second timeout so the UI never hangs indefinitely
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-      const uploadRes = await fetch(`${trackerBaseUrl}/upload`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileName: filePath, fileData: base64 }),
-      });
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formPayload,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
 
-      if (!uploadRes.ok) {
-        setAlert({ message: 'Error uploading image to VPS.', type: 'error' });
+        if (!uploadRes.ok) {
+          const errBody = await uploadRes.json().catch(() => ({}));
+          setAlert({ message: errBody.error || 'Image upload failed. Please try again.', type: 'error' });
+          setSaving(false);
+          return;
+        }
+
+        const { url } = await uploadRes.json();
+        finalImageUrl = url;
+      } catch (err: any) {
+        const message = err?.name === 'AbortError'
+          ? 'Upload timed out after 30 seconds. Check your connection and try again.'
+          : 'Upload failed unexpectedly. Please try again.';
+        setAlert({ message, type: 'error' });
         setSaving(false);
         return;
       }
-
-      const { url } = await uploadRes.json();
-      finalImageUrl = url;
     }
 
     if (!finalImageUrl) {

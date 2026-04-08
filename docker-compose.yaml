@@ -1,24 +1,19 @@
 version: '3.8'
 
 services:
-  ads-v4:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: ads-v4
+  ads-v6:
+    container_name: ads-v6
+    network_mode: host
+    build: .
     restart: always
-    ports:
-      - "3008:3008"
     environment:
       - PORT=3008
       - DATABASE_URL=postgresql://postgres:uzomary_adstracking@127.0.0.1:5432/adstracking
       - DATABASE_SSL=false
       - JWT_SECRET=adtrack_vps_production_secret_2024
       - NEXT_PUBLIC_TRACKER_URL=https://track.stakerschoiceads.com
+      - NEXT_PUBLIC_APP_URL=https://ads.stakerschoiceads.com
       - NODE_ENV=production
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-networks:
-  default:
-    name: ads-network
+    volumes:
+      # Persist uploaded banner images across container rebuilds/restarts
+      - /root/ads-uploads:/app/public/uploads

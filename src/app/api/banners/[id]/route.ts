@@ -1,20 +1,23 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-// GET single banner with stats
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '20mb',
+    },
+  },
+};
+
+// GET single banner with basic info
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
     const { rows } = await db.query(
-      `SELECT b.*, c.name AS campaign_name,
-        COUNT(e.id) FILTER (WHERE e.type = 'IMPRESSION') AS impressions,
-        COUNT(DISTINCT e.ip_address) FILTER (WHERE e.type = 'IMPRESSION') AS unique_impressions,
-        COUNT(e.id) FILTER (WHERE e.type = 'CLICK') AS clicks
+      `SELECT b.*, c.name AS campaign_name
        FROM banners b
        LEFT JOIN campaigns c ON c.id = b.campaign_id
-       LEFT JOIN tracking_events e ON e.banner_id = b.id
-       WHERE b.id = $1
-       GROUP BY b.id, c.name`,
+       WHERE b.id = $1`,
       [id]
     );
 
