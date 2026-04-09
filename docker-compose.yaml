@@ -1,10 +1,14 @@
 version: '3.8'
 
 services:
-  ads-v7:
-    container_name: ads-v7
+  ads-v14:
+    container_name: ads-v14
     network_mode: host
-    build: .
+    build:
+      context: .
+      args:
+        - NEXT_PUBLIC_TRACKER_URL=https://track.stakerschoiceads.com
+        - NEXT_PUBLIC_APP_URL=https://stakerschoiceads.com
     restart: always
     environment:
       - PORT=3009
@@ -15,5 +19,4 @@ services:
       - NEXT_PUBLIC_APP_URL=https://stakerschoiceads.com
       - NODE_ENV=production
     volumes:
-      # Persist uploaded banner images across container rebuilds/restarts
       - /root/ads-uploads:/app/public/uploads
